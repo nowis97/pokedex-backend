@@ -1,9 +1,8 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom, map } from 'rxjs';
-import { PokemonListRequest, PokemonResult } from '../dtos/pokemon-list.request.dto';
-import { AxiosResponse } from 'axios';
-import { PokemonRequest } from '../dtos/pokemon.request.dto';
+import { PokemonListResponse, PokemonResult } from '../interfaces/pokemon-list.response.dto';
+import { PokemonResponse } from '../interfaces/pokemon.response.dto';
 import { Pokemon } from '../dtos/pokemon.dto';
 import { PokemonError } from '../dtos/pokemon-error.dto';
 
@@ -17,18 +16,22 @@ export class PokedexService {
             limit
         }
 
-        return firstValueFrom(this.httpService.get<PokemonListRequest>('/pokemon', { params: queryParams }).pipe(map(response => response.data.results)));
+        return firstValueFrom(this.httpService.get<PokemonListResponse>('/pokemon', { params: queryParams }).pipe(map(response => response.data.results)));
     }
 
-    private getPokemonFromURL(url: string): Promise<PokemonRequest> {
-        return firstValueFrom(this.httpService.get<PokemonRequest>(url, { baseURL: '' }).pipe(map(response => response.data)));
+    private getPokemonFromURL(url: string): Promise<PokemonResponse> {
+        return firstValueFrom(this.httpService.get<PokemonResponse>(url, { baseURL: '' }).pipe(map(response => response.data)));
+    }
+
+    async getPokemon(idOrName: string): Promise<PokemonResponse> {
+        return firstValueFrom(this.httpService.get<PokemonResponse>(`/pokemon/${idOrName}`).pipe(map(response => response.data)));
     }
 
     async getPokemons(offset: number, limit: number): Promise<(Pokemon | PokemonError)[]> {
         let pokemons: PokemonResult[] = [];
         try {
             pokemons = await this.getListPokemons(offset, limit);
-        }catch(e){
+        } catch (e) {
             console.error(pokemons)
         }
         const promisePokemons = pokemons.map(pokemon => this.getPokemonFromURL(pokemon.url));
@@ -49,6 +52,41 @@ export class PokedexService {
             }
         })
     }
+
+
+
+   private async getAllPokemons(): Promise<PokemonResult[]> {
+        let allPokemons: PokemonResult[] = [];
+        let offset = 0;
+        const limit = 100; // Fetching 100 at a time
+        let currentBatch = [];
+
+        do {
+            const currentBatch = await this.getListPokemons(offset, limit);
+            allPokemons.push(...currentBatch);
+            offset += limit;
+        } while (currentBatch.length === 0);
+
+        return allPokemons;
+    }
+
+
+    async searchPokemon(query: string): Promise<Pokemon[]> {
+        const allPokemonNames: PokemonResult[] = await this.getAllPokemons()
+        const matchedPokemonNames = allPokemonNames.filter(pokemon => pokemon.name.includes(query.toLowerCase()));
+
+        const promisePokemons = matchedPokemonNames.map(pokemon => this.getPokemonFromURL(pokemon.url));
+        const detailsPokemons = await Promise.allSettled(promisePokemons);
+
+        return detailsPokemons
+            .filter(pokemonPromise => pokemonPromise.status === 'fulfilled')
+            .map((pokemonPromise: PromiseFulfilledResult<PokemonResponse>) => ({
+                id: pokemonPromise.value.id,
+                name: pokemonPromise.value.name,
+                frontSprite: pokemonPromise.value.sprites.other['official-artwork'].front_default
+            } as Pokemon));
+    }
+
 }
 
 

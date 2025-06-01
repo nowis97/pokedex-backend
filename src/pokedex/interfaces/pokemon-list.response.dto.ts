@@ -1,4 +1,4 @@
-export interface PokemonListRequest {
+export interface PokemonListResponse {
     results: PokemonResult[];
 }
 
