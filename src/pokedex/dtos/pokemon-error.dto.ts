@@ -1,4 +1,4 @@
 export interface PokemonError {
-    id: null;
-    error: string;
+  id: null;
+  error: string;
 }

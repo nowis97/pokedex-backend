@@ -1,8 +1,8 @@
 export interface PokemonListResponse {
-    results: PokemonResult[];
+  results: PokemonResult[];
 }
 
 export interface PokemonResult {
-    name: string;
-    url: string;
+  name: string;
+  url: string;
 }
