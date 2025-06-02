@@ -1,14 +1,14 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { firstValueFrom, map } from 'rxjs';
 import {
   PokemonListResponse,
   PokemonResult,
-} from '../interfaces/pokemon-list.response.dto';
-import { PokemonResponse } from '../interfaces/pokemon.response.dto';
+} from '../interfaces/pokemon-list.response.interface';
 import { Pokemon } from '../dtos/pokemon.dto';
 import { PokemonError } from '../dtos/pokemon-error.dto';
 import { AxiosError } from 'axios';
+import { PokemonDetails } from '../dtos/pokemon-details.dto';
 
 @Injectable()
 export class PokedexService {
@@ -30,18 +30,18 @@ export class PokedexService {
     );
   }
 
-  private getPokemonFromURL(url: string): Promise<PokemonResponse> {
+  private getPokemonFromURL(url: string): Promise<PokemonDetails> {
     return firstValueFrom(
       this.httpService
-        .get<PokemonResponse>(url, { baseURL: '' })
+        .get<PokemonDetails>(url, { baseURL: '' })
         .pipe(map((response) => response.data)),
     );
   }
 
-  async getPokemon(idOrName: string): Promise<PokemonResponse> {
+  async getPokemon(idOrName: string): Promise<PokemonDetails> {
     return firstValueFrom(
       this.httpService
-        .get<PokemonResponse>(`/pokemon/${idOrName}`)
+        .get<PokemonDetails>(`/pokemon/${idOrName}`)
         .pipe(map((response) => response.data)),
     ).catch((reason: AxiosError) => {
       throw new HttpException(reason.message, reason.status!);
@@ -110,7 +110,7 @@ export class PokedexService {
     return detailsPokemons
       .filter((pokemonPromise) => pokemonPromise.status === 'fulfilled')
       .map(
-        (pokemonPromise: PromiseFulfilledResult<PokemonResponse>) =>
+        (pokemonPromise: PromiseFulfilledResult<PokemonDetails>) =>
           ({
             id: pokemonPromise.value.id,
             name: pokemonPromise.value.name,
