@@ -9,6 +9,7 @@ import { Pokemon } from '../dtos/pokemon.dto';
 import { PokemonError } from '../dtos/pokemon-error.dto';
 import { AxiosError } from 'axios';
 import { PokemonDetails } from '../dtos/pokemon-details.dto';
+import { PokemonListResponseDTO } from '../dtos/pokemon-list.response.dto';
 
 @Injectable()
 export class PokedexService {
@@ -17,7 +18,7 @@ export class PokedexService {
   private getListPokemons(
     offset: number = 0,
     limit: number = 20,
-  ): Promise<PokemonResult[]> {
+  ): Promise<PokemonListResponse> {
     const queryParams = {
       offset,
       limit,
@@ -26,7 +27,7 @@ export class PokedexService {
     return firstValueFrom(
       this.httpService
         .get<PokemonListResponse>('/pokemon', { params: queryParams })
-        .pipe(map((response) => response.data.results)),
+        .pipe(map((response) => response.data)),
     );
   }
 
@@ -51,19 +52,19 @@ export class PokedexService {
   async getPokemons(
     offset: number,
     limit: number,
-  ): Promise<(Pokemon | PokemonError)[]> {
-    let pokemons: PokemonResult[] = [];
+  ): Promise<PokemonListResponseDTO> {
+    let response: PokemonListResponse | undefined;
     try {
-      pokemons = await this.getListPokemons(offset, limit);
+      response = await this.getListPokemons(offset, limit);
     } catch (e) {
       console.error(e);
     }
-    const promisePokemons = pokemons.map((pokemon) =>
+    const promisePokemons = response?.results?.map((pokemon) =>
       this.getPokemonFromURL(pokemon.url),
-    );
+    ) ?? [];
     const detailsPokemons = await Promise.allSettled(promisePokemons);
 
-    return detailsPokemons.map((pokemonPromise) => {
+    const responseDetailsPokemons = detailsPokemons.map((pokemonPromise) => {
       if (pokemonPromise.status === 'fulfilled') {
         return {
           id: pokemonPromise.value.id,
@@ -74,11 +75,16 @@ export class PokedexService {
         } as Pokemon;
       } else {
         return {
-          id: null,
           error: pokemonPromise.reason as string,
         } as PokemonError;
       }
     });
+
+    return {
+      count: response?.count ?? 0,
+      results: responseDetailsPokemons ?? []
+    }
+
   }
 
   private async getAllPokemons(): Promise<PokemonResult[]> {
@@ -88,7 +94,7 @@ export class PokedexService {
     let currentBatch: PokemonResult[] = [];
 
     do {
-      currentBatch = await this.getListPokemons(offset, limit);
+      currentBatch = (await this.getListPokemons(offset, limit)).results;
       allPokemons.push(...currentBatch);
       offset += limit;
     } while (currentBatch.length !== 0);

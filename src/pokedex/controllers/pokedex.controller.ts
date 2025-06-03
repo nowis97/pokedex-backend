@@ -4,22 +4,23 @@ import { Pokemon } from '../dtos/pokemon.dto';
 import { PokemonError } from '../dtos/pokemon-error.dto';
 import {
   ApiOkResponse,
+  refs,
 } from '@nestjs/swagger';
 import { PokemonDetails } from '../dtos/pokemon-details.dto';
+import { PokemonListResponseDTO } from '../dtos/pokemon-list.response.dto';
 
 @Controller('pokemon')
 export class PokedexController {
   constructor(private readonly pokedexService: PokedexService) {}
 
   @ApiOkResponse({
-    type: Pokemon,
-    isArray: true,
+    type: PokemonListResponseDTO,
   })
   @Get()
   getPokemons(
     @Query('offset') offset: number,
     @Query('limit') limit: number,
-  ): Promise<Array<Pokemon | PokemonError>> {
+  ): Promise<PokemonListResponseDTO> {
     return this.pokedexService.getPokemons(offset, limit);
   }
 
