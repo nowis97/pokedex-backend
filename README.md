@@ -26,7 +26,7 @@ npm install
 
 ### Running the application
 
-#### Before to running the app you have to create a .env file with this variable
+#### Before to running the app you have to create a .env file at root project with this variable
 
 ```
 POKE_API_URL="https://pokeapi.co/api/v2/"
