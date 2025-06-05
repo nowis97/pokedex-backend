@@ -1,11 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 class Type {
+  slot: number;
   @ApiProperty({
     description: 'Name of type',
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+      },
+    },
   })
-  name: string;
-  url: string;
+  type: { name: string };
 }
 
 class Other {

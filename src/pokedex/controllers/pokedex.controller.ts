@@ -1,11 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PokedexService } from '../services/pokedex.service';
 import { Pokemon } from '../dtos/pokemon.dto';
-import { PokemonError } from '../dtos/pokemon-error.dto';
-import {
-  ApiOkResponse,
-  refs,
-} from '@nestjs/swagger';
+import { ApiOkResponse } from '@nestjs/swagger';
 import { PokemonDetails } from '../dtos/pokemon-details.dto';
 import { PokemonListResponseDTO } from '../dtos/pokemon-list.response.dto';
 

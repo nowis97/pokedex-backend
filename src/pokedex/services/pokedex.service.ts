@@ -57,11 +57,12 @@ export class PokedexService {
     try {
       response = await this.getListPokemons(offset, limit);
     } catch (e) {
-      console.error(e);
+      throw e;
     }
-    const promisePokemons = response?.results?.map((pokemon) =>
-      this.getPokemonFromURL(pokemon.url),
-    ) ?? [];
+    const promisePokemons =
+      response?.results?.map((pokemon) =>
+        this.getPokemonFromURL(pokemon.url),
+      ) ?? [];
     const detailsPokemons = await Promise.allSettled(promisePokemons);
 
     const responseDetailsPokemons = detailsPokemons.map((pokemonPromise) => {
@@ -82,9 +83,8 @@ export class PokedexService {
 
     return {
       count: response?.count ?? 0,
-      results: responseDetailsPokemons ?? []
-    }
-
+      results: responseDetailsPokemons ?? [],
+    };
   }
 
   private async getAllPokemons(): Promise<PokemonResult[]> {
