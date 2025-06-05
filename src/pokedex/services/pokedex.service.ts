@@ -87,6 +87,11 @@ export class PokedexService {
     };
   }
 
+  /**
+   * Get all pokemons for live search
+   * @private
+   *
+   */
   private async getAllPokemons(): Promise<PokemonResult[]> {
     const allPokemons: PokemonResult[] = [];
     let offset = 0;
@@ -104,15 +109,19 @@ export class PokedexService {
 
   async searchPokemon(query: string): Promise<Pokemon[]> {
     const allPokemonNames: PokemonResult[] = await this.getAllPokemons();
+
+    // Filter those that match the search
     const matchedPokemonNames = allPokemonNames.filter((pokemon) =>
       pokemon.name.includes(query.toLowerCase()),
     );
 
+    //Get the details for each filtered
     const promisePokemons = matchedPokemonNames.map((pokemon) =>
       this.getPokemonFromURL(pokemon.url),
     );
     const detailsPokemons = await Promise.allSettled(promisePokemons);
 
+    //Filter only successful promises and map the data.
     return detailsPokemons
       .filter((pokemonPromise) => pokemonPromise.status === 'fulfilled')
       .map(
