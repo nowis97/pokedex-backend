@@ -6,8 +6,8 @@ This project is a NestJS application that provides a backend for a Pokedex.
 
 ### Prerequisites
 
-*   Node.js (version >= 16.x)
-*   npm (version >= 8.x)
+*   Node.js (version >= 20.x)
+*   npm (version >= 9.x)
 
 ### Clone the repository
 
